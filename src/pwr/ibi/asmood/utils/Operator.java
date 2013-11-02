@@ -2,8 +2,11 @@ package pwr.ibi.asmood.utils;
 
 //import java.text.SimpleDateFormat;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.LinkedList;
 
 import javax.swing.JTextArea;
@@ -82,6 +85,25 @@ public class Operator
     }
 	
 	
+	/**
+	 * @return -1 jeśli host nie odpowiada lub czas odpowiedzi hosta w milisekundach.
+	 * */
+	public long ping(String host, int timeout)
+	{
+		long time = System.currentTimeMillis();
+		try {
+			time = System.currentTimeMillis();
+			InetAddress.getByName(host).isReachable(timeout);
+			time = System.currentTimeMillis() - time;
+		} 
+		catch (UnknownHostException e) 
+		{return -1;} 
+		catch (IOException e) 
+		{return -1;}
+		
+		return time < timeout ? time : -1;
+		
+	}
 	
 	
 	
