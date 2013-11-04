@@ -1,5 +1,7 @@
 package pwr.ibi.asmood.utils;
 
+import java.awt.Color;
+import java.awt.GradientPaint;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -14,6 +16,16 @@ import java.util.Map;
 
 import javax.swing.JTextArea;
 
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.axis.NumberAxis;
+import org.jfree.chart.plot.CategoryPlot;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.renderer.category.BarRenderer;
+import org.jfree.data.category.CategoryDataset;
+import org.jfree.data.category.DefaultCategoryDataset;
+
 import pwr.ibi.asmood.logic.ProgressListener;
 
 public class Operator 
@@ -22,13 +34,16 @@ public class Operator
 	
 	private static JTextArea info_area;
 	
+	ResearchResultManager researchResultManager;
+	ArrayList<ResearchResult> list;
+	
 	public void read(String path, boolean filtering, ProgressListener listener)
 	{
 		
 		if(listener!=null)
 			listener.onStart();
 
-		log = CSVReader.readCSV(path, listener);
+		log = CSVReader.readCSV("C:\\Users\\Adam\\Documents\\studia\\mgr semestr II\\IBI\\l\\GeoIPASNum2\\GeoIPASNum2.csv", listener);
 
 		if(listener!=null)
 			listener.onFinish();
@@ -39,6 +54,76 @@ public class Operator
 		results.add(new TestResult("ping", "as3", "111.111.111.113", 3, 7));
 		results.add(new TestResult("traceroute", "as4", "111.111.111.114", 4, 8));
 		CSVWriter.writeCSV(results);*/
+	}
+	
+	public ChartPanel createChart() {
+	  	ChartPanel panel;
+        JFreeChart chart = ChartFactory.createBarChart(
+            "Czasy odpowiedzi hostów",    // chart title
+            "Host",                // domain axis label
+            "Czas odpowiedzi",           // range axis label
+            createLogDataset(),       // data
+            PlotOrientation.VERTICAL, // orientation
+            true,                     // include legend
+            true,                     // tooltips?
+            false                     // URLs?
+        );
+        
+        
+        chart.setBackgroundPaint(Color.white);
+
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+
+        // set the range axis to display integers only...
+        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+
+        // disable bar outlines...
+        BarRenderer renderer = (BarRenderer) plot.getRenderer();
+        renderer.setDrawBarOutline(false);
+
+        // set up gradient paints for series...
+        GradientPaint gp0 = new GradientPaint(0.0f, 0.0f, Color.blue,
+                0.0f, 0.0f, new Color(0, 0, 64));
+        GradientPaint gp1 = new GradientPaint(0.0f, 0.0f, Color.green,
+                0.0f, 0.0f, new Color(0, 64, 0));
+        GradientPaint gp2 = new GradientPaint(0.0f, 0.0f, Color.red,
+                0.0f, 0.0f, new Color(64, 0, 0));
+        renderer.setSeriesPaint(0, gp0);
+        renderer.setSeriesPaint(1, gp1);
+        renderer.setSeriesPaint(2, gp2);
+        
+        panel = new ChartPanel(chart);
+        panel.setPreferredSize(new java.awt.Dimension(300, 300));
+        panel.setVisible(true);
+        
+        return panel;
+	}
+	
+	private CategoryDataset createLogDataset(){
+		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
+		float time_delta = 60,
+			  current_time = time_delta;
+		int   i=0,  
+			  cat_nr = 1, 
+			  udp_acc = 0,
+			  tcp_acc = 0,
+			  other_acc = 0;
+		byte  protocol;
+		
+		researchResultManager = CSVReader.readCSVTests("C:\\Users\\Adam\\workspace\\asmood1383570012005.csv", null);
+		ResearchResult[] researchResults = researchResultManager.getResearchResult();
+		for(ResearchResult  item: researchResults){
+			System.out.println(item.toString());
+		}
+		System.out.println(researchResultManager.getAsnList());
+		researchResultManager.readAsnTests("as1");
+		list = researchResultManager.getAsnPingTests();
+		System.out.println(list);
+		for(ResearchResult item: list){
+			dataset.addValue(item.getResult(), item.getHost(), ""+cat_nr);
+		}
+	    return dataset;
 	}
 	
 	public ASDescription[] getLog()

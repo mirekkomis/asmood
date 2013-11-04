@@ -67,6 +67,61 @@ public class CSVReader {
 		return out;
 	}
 	
+	public static ResearchResultManager readCSVTests(String path, ProgressListener progress){
+		BufferedReader br = null;
+		LineNumberReader lnr = null;	
+		String line = "";
+		String cvsSplitBy = "[,]";
+		int lines_number = 0,line_nr = 0,percent=0, tmp_percent=0;
+		LinkedList<ResearchResult> temp = new LinkedList<>();
+		try 
+		{
+			if(progress!=null)
+			{
+				lnr = new LineNumberReader(new FileReader(path));
+				lnr.skip(Integer.MAX_VALUE);
+				lines_number = lnr.getLineNumber();
+				lnr.close();	
+			}
+			
+			br = new BufferedReader(new FileReader(path));
+			while ((line = br.readLine()) != null) 
+			{
+				String[] log = line.split(cvsSplitBy);
+				temp.add(new ResearchResult(log));
+				if(progress!=null)
+				{
+					line_nr++;
+					progress.onValueChange(line_nr, lines_number);
+					tmp_percent = (int)(100.0*(((double)line_nr)/(double)lines_number));
+					if(tmp_percent > percent)
+					{
+						percent=tmp_percent;
+						progress.onProgres(percent);
+					}
+				}
+			}
+		} catch (FileNotFoundException e) {
+			Operator.LOG(""+e.getMessage());
+		} catch (IOException e) {
+			Operator.LOG(""+e.getMessage());
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					Operator.LOG(""+e.getMessage());
+				}
+			}
+		}
+		ResearchResult[] out = new ResearchResult[temp.size()];
+		temp.toArray(out);
+		temp.clear();
+		temp = null;
+		System.gc();
+		return new ResearchResultManager(out);
+	}
+	
 //	private Instances data_set;
 //	
 //	public enum SELECTOR_TYPE

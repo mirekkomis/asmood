@@ -14,6 +14,8 @@ import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
 import javax.swing.text.DefaultCaret;
 
+import org.jfree.chart.ChartPanel;
+
 import pwr.ibi.asmood.logic.ProgressListener;
 import pwr.ibi.asmood.utils.Operator;
 import pwr.ibi.asmood.utils.SelectedAS;
@@ -160,7 +162,7 @@ class MyMenu extends JPanel{
         owner = observer;
         setLayout(null);
         TitledBorder gener = BorderFactory.createTitledBorder("Wczytywanie");
-        TitledBorder optim = BorderFactory.createTitledBorder("Wyszukiwanie HostÃ³w");
+        TitledBorder optim = BorderFactory.createTitledBorder("Wyszukiwanie Hostów");
         TitledBorder algor = BorderFactory.createTitledBorder("Parametry Badania");
         
         
@@ -233,6 +235,8 @@ class MyMenu extends JPanel{
 							public void onFinish() 
 							{
 								dataPanel.updateDataSet(operator.getLog());
+								ChartPanel pingPanel = operator.createChart();
+								myTabs.setComponentAt(1, pingPanel);
 							}
 
 							@Override
@@ -276,7 +280,7 @@ class MyMenu extends JPanel{
         port_val.setBounds(20, 40, 60, 20);
         params_pan.add(port_val);
         
-        host_nr_label = new JLabel("HostÃ³w:");
+        host_nr_label = new JLabel("Hostów:");
         host_nr_label.setBounds(5, 60, 150, 20);
         params_pan.add(host_nr_label);
         
@@ -342,7 +346,7 @@ class MyMenu extends JPanel{
         timeout2_val.setBounds(20, 40, 60, 20);
         algorithm.add(timeout2_val);
         
-        ping_nr = new JLabel("ZapytaÅ„ Ping/Host");
+        ping_nr = new JLabel("Zapytañ „Ping/Host");
      	ping_nr.setBounds(5, 60, 150, 20);
      	algorithm.add(ping_nr);
         
@@ -350,7 +354,7 @@ class MyMenu extends JPanel{
      	ping_nr_val.setBounds(20, 80, 60, 20);
      	algorithm.add(ping_nr_val);
      	
-     	trace_nr = new JLabel("ZapytaÅ„ Trace/Host");
+     	trace_nr = new JLabel("Zapytañ „Trace/Host");
      	trace_nr.setBounds(5, 100, 150, 20);
      	algorithm.add(trace_nr);
      	
