@@ -10,7 +10,7 @@ import javax.swing.JButton;
 public class SelectedAS extends ASDescription {
 
 	public boolean selected = false;
-	private ArrayList<String> responded = new ArrayList<>();
+	public ArrayList<String> responded = new ArrayList<>();
 	private JButton plus = new JButton("+");
 	public static final int ROW_HEIGHT = 30;
 	
@@ -26,7 +26,7 @@ public class SelectedAS extends ASDescription {
 	
 	public SelectedAS(ASDescription desc, SelectedASListener listener)
 	{
-		this(desc.getBottomIP(), desc.getTopIP(), desc.getDescription());
+		this(desc.getBottomIP(), desc.getTopIP(), desc.getASN(), desc.getDescription());
 		plus.addActionListener(new ActionListener() {
 			@Override public void actionPerformed(ActionEvent arg0) {
 				plus.setText("-");
@@ -50,8 +50,8 @@ public class SelectedAS extends ASDescription {
 		return out;
 	}
 	
-	public SelectedAS(long bottomIP, long topIP, String descr) {
-		super(bottomIP, topIP, descr);
+	public SelectedAS(long bottomIP, long topIP, String asn, String descr) {
+		super(bottomIP, topIP, asn, descr);
 	}
 
 	public void onClicked()

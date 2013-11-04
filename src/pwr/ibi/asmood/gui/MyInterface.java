@@ -134,7 +134,7 @@ public class MyInterface extends JFrame
         add(menu);
 
 
-		algorithm.setEnabled(false);
+		algorithm.setEnabled(true);
         setVisible(true);
         
         myTabs.setComponentAt(0,dataPanel =  new DataPanel());
@@ -154,6 +154,7 @@ class MyMenu extends JPanel{
 	private JLabel host_nr_label;
 	private JTextField host_nr_val;
 	private JButton search_button;
+	private JTextField timeout2_val;
     
     public MyMenu(MyInterface observer){
         owner = observer;
@@ -325,40 +326,47 @@ class MyMenu extends JPanel{
 		});
         
         
-//        timeout_label = new JLabel("TimeOut[ms]");
-//        timeout_label.setBounds(5, 100, 150, 20);
-//        params_pan.add(timeout_label);
-//        
-//        ping_nr = new JLabel("Zapytań Ping");
-//        ping_nr.setBounds(5, 140, 150, 20);
-//        params_pan.add(ping_nr);
-//        
-//        trace_nr = new JLabel("Zapytań Trace");
-//        trace_nr.setBounds(5, 180, 150, 20);
-//        params_pan.add(trace_nr);
-//        
-//        timeout_val = new JTextField("1000");
-//        timeout_val.setBounds(20, 120, 60, 20);
-//        params_pan.add(timeout_val);
-//        
-//        ping_nr_val = new JTextField("10");
-//        ping_nr_val.setBounds(20, 160, 60, 20);
-//        params_pan.add(ping_nr_val);
-//        
-//        trace_nr_val = new JTextField("3");
-//        trace_nr_val.setBounds(20, 200, 60, 20);
-//        params_pan.add(trace_nr_val);
+//     
         
         algorithm = new JPanel();
         algorithm.setBorder(algor);
-        algorithm.setBounds(1, 470, 175, 210);
+        algorithm.setBounds(1, 430, 175, 260);
         algorithm.setLayout(null);
         
-        algorithm_progress = new JProgressBar();
-        algorithm_progress.setBounds(10, 235, 155, 20);
         
-        buttonAlgorithm = new JButton("Algorytm");
-        buttonAlgorithm.setBounds(16, 260, 140, 30);
+        timeout_label = new JLabel("TimeOut[ms]");
+        timeout_label.setBounds(5, 20, 150, 20);
+        algorithm.add(timeout_label);
+        
+        timeout2_val = new JTextField("1000");
+        timeout2_val.setBounds(20, 40, 60, 20);
+        algorithm.add(timeout2_val);
+        
+        ping_nr = new JLabel("Zapytań Ping/Host");
+     	ping_nr.setBounds(5, 60, 150, 20);
+     	algorithm.add(ping_nr);
+        
+     	ping_nr_val = new JTextField("5");
+     	ping_nr_val.setBounds(20, 80, 60, 20);
+     	algorithm.add(ping_nr_val);
+     	
+     	trace_nr = new JLabel("Zapytań Trace/Host");
+     	trace_nr.setBounds(5, 100, 150, 20);
+     	algorithm.add(trace_nr);
+     	
+     	trace_nr_val = new JTextField("1");
+     	trace_nr_val.setBounds(20, 120, 60, 20);
+     	algorithm.add(trace_nr_val);
+     	
+     	algorithm_progress = new JProgressBar();
+        algorithm_progress.setBounds(10, 185, 155, 20);
+        algorithm.add(algorithm_progress);
+        
+        buttonAlgorithm = new JButton("Start");
+        buttonAlgorithm.setBounds(16, 220, 140, 30);
+        algorithm.add(buttonAlgorithm);
+
+           
         buttonAlgorithm.addActionListener(new ActionListener(){
             @Override
             public void actionPerformed(ActionEvent e) 
@@ -366,7 +374,13 @@ class MyMenu extends JPanel{
             	Thread t = new Thread(){
             		public void run() 
             		{
-            			calculateAlgorithm();
+            			int[] params = new int[]
+            					{
+            						Integer.parseInt(timeout2_val.getText()),
+            						Integer.parseInt(ping_nr_val.getText()),
+            						Integer.parseInt(trace_nr_val.getText())
+            					};
+            			//TODO
             		};
             	};
             	t.setPriority(Thread.MAX_PRIORITY);
@@ -379,12 +393,6 @@ class MyMenu extends JPanel{
         add(params_pan);
         add(reader);
     }
-    
-    private void calculateAlgorithm()
-    {
-    	 
-    }
-    
 }
 	
     
