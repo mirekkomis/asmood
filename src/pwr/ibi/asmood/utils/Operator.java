@@ -34,7 +34,7 @@ public class Operator
 	
 	private static JTextArea info_area;
 	
-	ResearchResultManager researchResultManager;
+	public ResearchResultManager researchResultManager;
 	ArrayList<ResearchResult> list;
 	
 	public void read(String path, boolean filtering, ProgressListener listener)
@@ -56,6 +56,17 @@ public class Operator
 		CSVWriter.writeCSV(results);*/
 	}
 	
+	public void readResult(String path, boolean filtering, ProgressListener listener){
+		if(listener!=null)
+			listener.onStart();
+
+//		researchResultManager = CSVReader.readCSVTests(path, listener);
+		researchResultManager = CSVReader.readCSVTests("C:\\Users\\Adam\\workspace\\asmood1383570012005.csv", listener);
+		
+		if(listener!=null)
+			listener.onFinish();
+	}
+	
 	public ChartPanel createChart() {
 	  	ChartPanel panel;
         JFreeChart chart = ChartFactory.createBarChart(
@@ -68,7 +79,6 @@ public class Operator
             true,                     // tooltips?
             false                     // URLs?
         );
-        
         
         chart.setBackgroundPaint(Color.white);
 
@@ -101,23 +111,15 @@ public class Operator
 	}
 	
 	private CategoryDataset createLogDataset(){
-		DefaultCategoryDataset dataset = new DefaultCategoryDataset();
-		float time_delta = 60,
-			  current_time = time_delta;
-		int   i=0,  
-			  cat_nr = 1, 
-			  udp_acc = 0,
-			  tcp_acc = 0,
-			  other_acc = 0;
-		byte  protocol;
-		
-		researchResultManager = CSVReader.readCSVTests("C:\\Users\\Adam\\workspace\\asmood1383570012005.csv", null);
-		ResearchResult[] researchResults = researchResultManager.getResearchResult();
+		DefaultCategoryDataset dataset = new DefaultCategoryDataset(); 
+		int cat_nr = 1;
+
+		/*ResearchResult[] researchResults = researchResultManager.getResearchResult();
 		for(ResearchResult  item: researchResults){
 			System.out.println(item.toString());
 		}
-		System.out.println(researchResultManager.getAsnList());
-		researchResultManager.readAsnTests("as1");
+		System.out.println(researchResultManager.getAsnList());*/
+//		researchResultManager.readAsnTests("as1");
 		list = researchResultManager.getAsnPingTests();
 		System.out.println(list);
 		for(ResearchResult item: list){

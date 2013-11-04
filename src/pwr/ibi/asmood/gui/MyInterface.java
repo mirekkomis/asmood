@@ -8,7 +8,9 @@ import javax.swing.*;
 
 import java.awt.*;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.Vector;
 
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileFilter;
@@ -29,19 +31,20 @@ public class MyInterface extends JFrame
 {
 	private static final long serialVersionUID = -3196600042294504431L;
 	
-	JPanel reader, algorithm;
+	JPanel reader, algorithm, result;
 	DataPanel dataPanel;
 	
     JScrollPane pane1, pane2, pane3, pane4;
     MyMenu menu;
     JTabbedPane myTabs;
-    JProgressBar reader_progress, algorithm_progress;
+    JProgressBar reader_progress, reader_progress1, algorithm_progress;
     
     Operator operator = new Operator();
     
-    JButton buttonRead, buttonFileChooser,buttonAlgorithm;
+    JButton buttonRead, buttonRead1, buttonFileChooser,buttonFileChooser1,buttonAlgorithm;
 
 	public JTextField file_path;
+	public JTextField file_path1;
 
 	public JTextField comparision_file_path;
 
@@ -70,12 +73,12 @@ public class MyInterface extends JFrame
         
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         
-        setBounds(5,5,1150,750);
+        setBounds(5,5,1150,1000);
         setTitle("ASmood");
         setLayout(null);
         
         menu = new MyMenu(this);
-        menu.setBounds(953, 15, 175, 689);
+        menu.setBounds(953, 15, 175, 1000);
         
         JTextArea textArea = new JTextArea();
         textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
@@ -162,8 +165,9 @@ class MyMenu extends JPanel{
         owner = observer;
         setLayout(null);
         TitledBorder gener = BorderFactory.createTitledBorder("Wczytywanie");
-        TitledBorder optim = BorderFactory.createTitledBorder("Wyszukiwanie Hostów");
-        TitledBorder algor = BorderFactory.createTitledBorder("Parametry Badania");
+        TitledBorder optim = BorderFactory.createTitledBorder("Wyszukiwanie hostów");
+        TitledBorder algor = BorderFactory.createTitledBorder("Parametry badania");
+        TitledBorder wynik = BorderFactory.createTitledBorder("Wyniki badania");
         
         
         reader = new JPanel();
@@ -235,8 +239,6 @@ class MyMenu extends JPanel{
 							public void onFinish() 
 							{
 								dataPanel.updateDataSet(operator.getLog());
-								ChartPanel pingPanel = operator.createChart();
-								myTabs.setComponentAt(1, pingPanel);
 							}
 
 							@Override
@@ -393,9 +395,131 @@ class MyMenu extends JPanel{
             }      
 		});
         
+        
+        result = new JPanel();
+        result.setBorder(wynik);
+        result.setBounds(1, 700, 175, 220);
+        result.setLayout(null);
+        
+        file_path1 = new JTextField("");
+		file_path1.setBounds(8, 36, 120, 25);
+		file_path1.setColumns(10);
+		
+		final JLabel labl_file1 = new JLabel("Adres Pliku");
+		labl_file1.setBounds(16, 22, 100, 14);
+		
+		buttonFileChooser1 = new JButton("^");
+		buttonFileChooser1.setBounds(130, 35, 40, 26);
+		buttonFileChooser1.addActionListener(new ActionListener(){
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				JFileChooser fileChooser = new JFileChooser("");
+				 FileFilter filter1 = new ExtensionFileFilter("csv", new String[] { "csv"});
+				    fileChooser.setFileFilter(filter1);
+				int returnValue = fileChooser.showOpenDialog(null);
+                if (returnValue == JFileChooser.APPROVE_OPTION) {
+                    fileChooser.setVisible(true);
+                }
+                if(fileChooser.getSelectedFile()!=null)
+                {
+	                String path = fileChooser.getSelectedFile().getAbsolutePath();
+	                if(path!= null && !path.equals(""))
+	                	file_path1.setText(path);
+                }
+			}
+			
+		});
+		
+		reader_progress1 = new JProgressBar();
+		reader_progress1.setBounds(10, 65, 155, 20);
+		
+		final JLabel readen1 = new JLabel("");
+		readen1.setBackground(Color.RED);
+		readen1.setBounds(35, 75, 140, 40);
+		
+		Vector comboBoxItems = new Vector();
+		final DefaultComboBoxModel model = new DefaultComboBoxModel(comboBoxItems);
+		JComboBox jComboBox = new JComboBox(model);
+		jComboBox.setBounds(10, 185, 155, 20);
+		jComboBox.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				JComboBox cb = (JComboBox)e.getSource();
+			    String as = (String)cb.getSelectedItem();
+				operator.researchResultManager.readAsnTests(as);
+				ChartPanel pingPanel = operator.createChart();
+				myTabs.setComponentAt(1, pingPanel);
+			}
+		});
+		
+		buttonRead1 = new JButton("Wczytaj");
+        buttonRead1.setBounds(16, 125, 140, 30);
+        buttonRead1.addActionListener(new ActionListener(){
+            @Override
+            public void actionPerformed(ActionEvent e) 
+            {
+            	Thread t;
+            	(t = new Thread(){
+            		public void run() 
+            		{
+            			operator.readResult(file_path1.getText(), filter_check.isSelected(), 
+            					new ProgressListener() {
+							@Override
+							public void onProgres(int progress_percent) 
+							{
+								reader_progress1.setValue(progress_percent);
+							}
+							
+							@Override
+							public void onFinish() 
+							{
+								ArrayList<String> list = operator.researchResultManager.getAsnList();
+								operator.researchResultManager.readAsnTests(list.get(0));
+								ChartPanel pingPanel = operator.createChart();
+								myTabs.setComponentAt(1, pingPanel);
+								
+								model.removeAllElements();
+								for(String item: list)
+									model.addElement(item);
+							}
+
+							@Override
+							public void onStart() {
+								readen1.setText("Inicjalizacja...");
+							}
+
+							@Override
+							public void onValueChange(int current,
+									int whole_number) {
+								readen1.setText(current+"/"+whole_number);
+								
+							}
+						});
+            		}
+            		
+            	}).setPriority(Thread.MAX_PRIORITY);
+            	t.start();
+            }
+        });
+        
+        JLabel comboLabel = new JLabel("Wybierz AS");
+		comboLabel.setBounds(10, 160, 140, 20);
+		
+		result.add(comboLabel);
+		result.add(jComboBox);
+        result.add(reader_progress1);
+        result.add(buttonRead1);
+        result.add(file_path1);
+        result.add(labl_file1);
+        result.add(buttonFileChooser1);
+        result.add(readen1);
+
+        
         add(algorithm);
         add(params_pan);
         add(reader);
+        add(result);
     }
 }
 	
