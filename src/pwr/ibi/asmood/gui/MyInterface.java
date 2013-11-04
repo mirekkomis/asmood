@@ -31,7 +31,7 @@ public class MyInterface extends JFrame
 {
 	private static final long serialVersionUID = -3196600042294504431L;
 	
-	JPanel reader, algorithm, result;
+	JPanel reader,params_pan, algorithm, result;
 	DataPanel dataPanel;
 	
     JScrollPane pane1, pane2, pane3, pane4;
@@ -73,12 +73,12 @@ public class MyInterface extends JFrame
         
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         
-        setBounds(5,5,1150,1000);
+        setBounds(5,5,1150,750);
         setTitle("ASmood");
         setLayout(null);
         
         menu = new MyMenu(this);
-        menu.setBounds(953, 15, 175, 1000);
+        menu.setBounds(953, 15, 175, 689);
         
         JTextArea textArea = new JTextArea();
         textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
@@ -117,10 +117,34 @@ public class MyInterface extends JFrame
 				int x = myTabs.getSelectedIndex();
 				if(x==1 || x == 2)
 				{
+					result.setVisible(true);
+			        result.setEnabled(true);
+			        
+			        reader.setVisible(false);
+			        reader.setEnabled(false);
+			        
+			        params_pan.setVisible(false);
+			        params_pan.setEnabled(false);
+			        
+			        algorithm.setVisible(false);
+			        algorithm.setEnabled(false);
+			        
+			        
+			        
 				}
 				else
 				{
-					
+					result.setVisible(false);
+			        result.setEnabled(false);
+			        
+			        reader.setVisible(true);
+			        reader.setEnabled(true);
+			        
+			        params_pan.setVisible(true);
+			        params_pan.setEnabled(true);
+			        
+			        algorithm.setVisible(true);
+			        algorithm.setEnabled(true);
 				}
 			}
 			
@@ -153,7 +177,7 @@ class MyMenu extends JPanel{
 	private static final long serialVersionUID = 6020444224671436627L;
 	MyInterface owner;
     JTextField field, timeout_val,systematic_val2, trace_nr_val, ping_nr_val, n_N_val2;
-    JLabel timeout_label, ping_nr,trace_nr;
+    JLabel timeout_label, ping_nr,trace_nr, info_label;
 	private JLabel port_label;
 	private JTextField port_val;
 	private JLabel host_nr_label;
@@ -165,7 +189,7 @@ class MyMenu extends JPanel{
         owner = observer;
         setLayout(null);
         TitledBorder gener = BorderFactory.createTitledBorder("Wczytywanie");
-        TitledBorder optim = BorderFactory.createTitledBorder("Wyszukiwanie hostów");
+        TitledBorder optim = BorderFactory.createTitledBorder("Wyszukiwanie hostÃ³w");
         TitledBorder algor = BorderFactory.createTitledBorder("Parametry badania");
         TitledBorder wynik = BorderFactory.createTitledBorder("Wyniki badania");
         
@@ -268,7 +292,7 @@ class MyMenu extends JPanel{
 		reader.add(readen);
         
         
-        JPanel params_pan = new JPanel();
+        params_pan = new JPanel();
         params_pan.setBorder(optim);
         params_pan.setBounds(1, 220, 175, 200);
         params_pan.setLayout(null);
@@ -282,7 +306,7 @@ class MyMenu extends JPanel{
         port_val.setBounds(20, 40, 60, 20);
         params_pan.add(port_val);
         
-        host_nr_label = new JLabel("Hostów:");
+        host_nr_label = new JLabel("HostÃ³w:");
         host_nr_label.setBounds(5, 60, 150, 20);
         params_pan.add(host_nr_label);
         
@@ -348,7 +372,7 @@ class MyMenu extends JPanel{
         timeout2_val.setBounds(20, 40, 60, 20);
         algorithm.add(timeout2_val);
         
-        ping_nr = new JLabel("Zapytañ „Ping/Host");
+        ping_nr = new JLabel("ZapytaÅ„ Ping/Host");
      	ping_nr.setBounds(5, 60, 150, 20);
      	algorithm.add(ping_nr);
         
@@ -356,7 +380,7 @@ class MyMenu extends JPanel{
      	ping_nr_val.setBounds(20, 80, 60, 20);
      	algorithm.add(ping_nr_val);
      	
-     	trace_nr = new JLabel("Zapytañ „Trace/Host");
+     	trace_nr = new JLabel("ZapytaÅ„ Trace/Host");
      	trace_nr.setBounds(5, 100, 150, 20);
      	algorithm.add(trace_nr);
      	
@@ -365,8 +389,13 @@ class MyMenu extends JPanel{
      	algorithm.add(trace_nr_val);
      	
      	algorithm_progress = new JProgressBar();
-        algorithm_progress.setBounds(10, 185, 155, 20);
+        algorithm_progress.setBounds(10, 160, 155, 20);
         algorithm.add(algorithm_progress);
+        
+        
+        info_label = new JLabel("");
+        info_label.setBounds(5, 180, 150, 20);
+        algorithm.add(info_label);
         
         buttonAlgorithm = new JButton("Start");
         buttonAlgorithm.setBounds(16, 220, 140, 30);
@@ -386,7 +415,45 @@ class MyMenu extends JPanel{
             						Integer.parseInt(ping_nr_val.getText()),
             						Integer.parseInt(trace_nr_val.getText())
             					};
-            			//TODO
+            			operator.startResearch(params, dataPanel.getSelected(), new ProgressListener() {
+							
+							@Override
+							public void onValueChange(int current, int whole_number) {}
+							
+							@Override
+							public void onStart() {
+								info_label.setText(" [1/5] : Init ping");
+							}
+							
+							@Override
+							public void onProgres(int progress_percent) 
+							{
+								algorithm_progress.setValue(progress_percent);
+								
+								if(progress_percent < 40)
+								{
+									info_label.setText(" [2/5] : Test ping");
+								}
+								else if(progress_percent < 45)
+								{
+									info_label.setText(" [3/5] : Init traceroute");
+								}
+								else if(progress_percent < 98)
+								{
+									info_label.setText(" [4/5] : Test traceroute");
+								}
+								else 
+								{
+									info_label.setText(" [5/5] : Zapisywanie wynikÃ³w");
+								}
+							}
+							
+							@Override
+							public void onFinish() {
+								info_label.setText("");
+								algorithm_progress.setValue(0);
+							}
+						});
             		};
             	};
             	t.setPriority(Thread.MAX_PRIORITY);
@@ -398,7 +465,9 @@ class MyMenu extends JPanel{
         
         result = new JPanel();
         result.setBorder(wynik);
-        result.setBounds(1, 700, 175, 220);
+        result.setBounds(1, 10, 175, 220);
+        result.setVisible(false);
+        result.setEnabled(false);
         result.setLayout(null);
         
         file_path1 = new JTextField("");

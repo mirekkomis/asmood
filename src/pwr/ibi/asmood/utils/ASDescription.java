@@ -67,7 +67,7 @@ public class ASDescription {
 	}
 	public static long IpToLong(String ip)
 	{
-		String[] oct = ip.split(".");
+		String[] oct = ip.split("\\.");
 		return oct.length == 4 ? Long.parseLong(oct[0])*num1
 				+ Long.parseLong(oct[1])*num2
 				+ Long.parseLong(oct[2])*num3

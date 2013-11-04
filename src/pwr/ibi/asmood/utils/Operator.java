@@ -12,6 +12,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.swing.JTextArea;
 
@@ -70,7 +72,7 @@ public class Operator
 	public ChartPanel createPingChart() {
 	  	ChartPanel panel;
         JFreeChart chart = ChartFactory.createBarChart(
-            "Czasy odpowiedzi hostów",    // chart title
+            "Czasy odpowiedzi hostÃ³w",    // chart title
             "Host",                // domain axis label
             "Czas odpowiedzi",           // range axis label
             createDataset(false),       // data
@@ -102,9 +104,9 @@ public class Operator
 	public ChartPanel createTraceChart() {
 	  	ChartPanel panel;
         JFreeChart chart = ChartFactory.createBarChart(
-            "Iloœæ odwiedzonych wêz³ów wewn¹trz ASa",    // chart title
+            "IloÅ›Ä‡ odwiedzonych wÄ™zÅ‚Ã³w wewnÄ…trz ASa",    // chart title
             "Host",                // domain axis label
-            "Iloœæ wêz³ów",           // range axis label
+            "IloÅ›Ä‡ wÄ™zÅ‚Ã³w",           // range axis label
             createDataset(true),       // data
             PlotOrientation.VERTICAL, // orientation
             true,                     // include legend
@@ -185,25 +187,73 @@ public class Operator
 	}
 	
 	
-	private ArrayList<TestResult> startResearch(int[] params, LinkedList<SelectedAS> list)
+	public void startResearch(int[] params, LinkedList<SelectedAS> list, final ProgressListener listener)
 	{
+		
 		ArrayList<TestResult> results = new ArrayList<>();
 		
 		int timeOut = params[0];
 		int pingTimes = params[1];	// pings per host
 		int traceTimes = params[2]; // traces per host
 		
-		results.addAll(pingTest(list, pingTimes, timeOut));
-		results.addAll(traceTest(list, traceTimes));
+		if(listener!=null)listener.onStart();
 		
+		// The Ping test is 40% of testing
+		results.addAll(pingTest(list, pingTimes, timeOut, new ProgressListener() {
+			@Override public void onValueChange(int current, int whole_number) {}
+			@Override public void onStart() {}
+			
+			@Override public void onProgres(int progress_percent) 
+			{
+				if(listener!=null)
+					listener.onProgres(progress_percent*40/100);
+			}
+			
+			@Override public void onFinish() 
+			{
+				if(listener!=null)listener.onProgres(40);
+			}
+		}));
+		
+		
+		// The Trace test is 58% of testing
+		results.addAll(traceTest(list, traceTimes, new ProgressListener() {
+			@Override public void onValueChange(int current, int whole_number) {}
+			@Override public void onStart() {}
+			
+			@Override public void onProgres(int progress_percent) 
+			{	
+				if(listener!=null)
+					listener.onProgres(40+((progress_percent*58)/100));
+			}
+			
+			@Override public void onFinish() 
+			{
+				if(listener!=null)listener.onProgres(98);
+			}
+		}));
+		
+		//Saving results is 2%
 		CSVWriter.writeCSV(results);
 		
-		return results;
+		if(listener!=null)listener.onFinish();
 	}
 	
-	private ArrayList<TestResult> pingTest(LinkedList<SelectedAS> list, int times, int timeOut)
+	private ArrayList<TestResult> pingTest(LinkedList<SelectedAS> list, int times, int timeOut, ProgressListener listener)
 	{
+		
+		if(listener!=null)listener.onStart();
+		
 		ArrayList<TestResult> results = new ArrayList<>();
+		
+		float number = 0;
+		
+		for(SelectedAS as : list)
+			number+=as.getRespondedNumber();
+		
+		float step = ((number*(float)times)/100.0f);
+		float percent = 0;
+		
 		for(SelectedAS as : list)
 		{
 			for(String host : as.responded)
@@ -211,30 +261,48 @@ public class Operator
 				{
 					long time = System.currentTimeMillis();
 					int result = (int)ping(host, timeOut);
-					results.add(new TestResult("PING", as.getASN(), host, result, time));
-					LOG("Test(\'PING\'-"+as.getASN()+"):"+host+" = "+(result == -1 ? "timeOut" : result));
+					results.add(new TestResult("ping", as.getASN(), host, result, time));
+					LOG("Test(\'ping\'-"+as.getASN()+"):"+host+" = "+(result == -1 ? "timeOut" : result));
+					
+					if(listener!=null && ((int)percent) < ((int)(percent+step)))
+					{
+						listener.onProgres((int)percent);
+					}
+					
+					
 				}
 		}
+		
+		if(listener!=null)listener.onFinish();
+		
 		return results;
 	}
 	
 	
-	private ArrayList<TestResult> traceTest(LinkedList<SelectedAS> list, int times)
+	private ArrayList<TestResult> traceTest(LinkedList<SelectedAS> list, int times, ProgressListener listener)
 	{
-		
+		if(listener!=null)listener.onStart();
 		//init Trace test - lookup for all ipranges for one AS;
 		Map<String,long[][]> asn_map = new HashMap<String, long[][]>();
+		
+		int total = 0;
 		
 		if(log != null && list != null)
 		{
 			for(SelectedAS as : list)
 			{
+				total+=as.getRespondedNumber();
 				if(!asn_map.containsKey(as.getASN()))
 				{
 					asn_map.put(as.getASN(), AsIpRangeLookup(as.getASN()));
 				}
 			}
 		}
+		float percent = 10;
+		
+		listener.onProgres((int)percent);
+		
+		float step = 90f/((float)(total*times));
 		
 		ArrayList<TestResult> results = new ArrayList<>();
 		for(SelectedAS as : list)
@@ -250,10 +318,19 @@ public class Operator
 					
 					long time = System.currentTimeMillis();
 					int result = hopsInAS(as.getASN(), asn_map, trace);
-					results.add(new TestResult("TRACE", as.getASN(), host, result, time));
-					LOG("Test(\'TRACE\'-"+as.getASN()+"):"+host+" = "+result);
+					results.add(new TestResult("traceroute", as.getASN(), host, result, time));
+					LOG("Test(\'traceroute\'-"+as.getASN()+"):"+host+" = "+result);
+					
+					if(listener!=null && ((int)percent) < ((int)(percent+step)))
+					{
+						percent += step;
+						listener.onProgres((int)percent);
+					}
 				}
 		}
+		
+		if(listener!=null)listener.onFinish();
+		
 		return results;
 	}
 	
@@ -316,22 +393,45 @@ public class Operator
 	 * Dla Linuxia
 	 * @return Tablica adresow IP - lista hopow w traceroute
 	 * */
-	public String[] traceroute(String host) throws IOException
+	public static String[] traceroute(String host) throws IOException
 	{
 		Process traceRt;
 		ArrayList<String> hops = new ArrayList<>();
 		String line;
-		
-        traceRt = Runtime.getRuntime().exec("traceroute -n "+host+" | tail -n+2 | awk \'{ print $2 }\'");
+		String command = "traceroute -n "+host;
+        traceRt = Runtime.getRuntime().exec(command);
         BufferedReader input = new BufferedReader(new InputStreamReader(
         		traceRt.getInputStream()));
         while ((line = input.readLine()) != null) 
         {
         	hops.add(line);
         }
+        hops.remove(0);
         String[] out = new String[hops.size()];
         hops.toArray(out);
+        
+        for(int i = 0; i < out.length; i++)
+        {
+        	out[i] = ipLookup(out[i]);
+        }
         return out;
+	}
+	
+	static String IPADDRESS_PATTERN = 
+	        "(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)";
+
+	static Pattern pattern = Pattern.compile(IPADDRESS_PATTERN);
+	
+	private static String ipLookup(String input)
+	{
+		
+		Matcher matcher = pattern.matcher(input);
+		        if (matcher.find()) {
+		            return matcher.group();
+		        }
+		        else{
+		            return "0.0.0.0";
+		        }
 	}
 	
 	/**
