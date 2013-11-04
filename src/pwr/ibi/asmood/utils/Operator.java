@@ -32,6 +32,13 @@ public class Operator
 
 		if(listener!=null)
 			listener.onFinish();
+		
+		/*ArrayList<TestResult> results = new ArrayList<TestResult>();
+		results.add(new TestResult("ping", "as1", "111.111.111.111", 1, 5));
+		results.add(new TestResult("ping", "as2", "111.111.111.112", 2, 6));
+		results.add(new TestResult("ping", "as3", "111.111.111.113", 3, 7));
+		results.add(new TestResult("traceroute", "as4", "111.111.111.114", 4, 8));
+		CSVWriter.writeCSV(results);*/
 	}
 	
 	public ASDescription[] getLog()
@@ -84,6 +91,8 @@ public class Operator
 		
 		results.addAll(pingTest(list, pingTimes, timeOut));
 		results.addAll(traceTest(list, traceTimes));
+		
+		CSVWriter.writeCSV(results);
 		
 		return results;
 	}
