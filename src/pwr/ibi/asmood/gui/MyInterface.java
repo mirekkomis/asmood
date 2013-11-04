@@ -448,8 +448,10 @@ class MyMenu extends JPanel{
 				JComboBox cb = (JComboBox)e.getSource();
 			    String as = (String)cb.getSelectedItem();
 				operator.researchResultManager.readAsnTests(as);
-				ChartPanel pingPanel = operator.createChart();
+				ChartPanel pingPanel = operator.createPingChart();
 				myTabs.setComponentAt(1, pingPanel);
+				ChartPanel tracePanel = operator.createTraceChart();
+				myTabs.setComponentAt(2, tracePanel);
 			}
 		});
 		
@@ -476,8 +478,11 @@ class MyMenu extends JPanel{
 							{
 								ArrayList<String> list = operator.researchResultManager.getAsnList();
 								operator.researchResultManager.readAsnTests(list.get(0));
-								ChartPanel pingPanel = operator.createChart();
+								ChartPanel pingPanel = operator.createPingChart();
 								myTabs.setComponentAt(1, pingPanel);
+								
+								ChartPanel tracePanel = operator.createTraceChart();
+								myTabs.setComponentAt(2, tracePanel);
 								
 								model.removeAllElements();
 								for(String item: list)

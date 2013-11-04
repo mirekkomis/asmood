@@ -1,7 +1,6 @@
 package pwr.ibi.asmood.utils;
 
 import java.awt.Color;
-import java.awt.GradientPaint;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -43,7 +42,8 @@ public class Operator
 		if(listener!=null)
 			listener.onStart();
 
-		log = CSVReader.readCSV("C:\\Users\\Adam\\Documents\\studia\\mgr semestr II\\IBI\\l\\GeoIPASNum2\\GeoIPASNum2.csv", listener);
+		log = CSVReader.readCSV(path, listener);
+//		log = CSVReader.readCSV("C:\\Users\\Adam\\Documents\\studia\\mgr semestr II\\IBI\\l\\GeoIPASNum2\\GeoIPASNum2.csv", listener);
 
 		if(listener!=null)
 			listener.onFinish();
@@ -60,20 +60,20 @@ public class Operator
 		if(listener!=null)
 			listener.onStart();
 
-//		researchResultManager = CSVReader.readCSVTests(path, listener);
-		researchResultManager = CSVReader.readCSVTests("C:\\Users\\Adam\\workspace\\asmood1383570012005.csv", listener);
+		researchResultManager = CSVReader.readCSVTests(path, listener);
+//		researchResultManager = CSVReader.readCSVTests("C:\\Users\\Adam\\workspace\\asmood1383570012005.csv", listener);
 		
 		if(listener!=null)
 			listener.onFinish();
 	}
 	
-	public ChartPanel createChart() {
+	public ChartPanel createPingChart() {
 	  	ChartPanel panel;
         JFreeChart chart = ChartFactory.createBarChart(
             "Czasy odpowiedzi hostów",    // chart title
             "Host",                // domain axis label
             "Czas odpowiedzi",           // range axis label
-            createLogDataset(),       // data
+            createDataset(false),       // data
             PlotOrientation.VERTICAL, // orientation
             true,                     // include legend
             true,                     // tooltips?
@@ -92,17 +92,6 @@ public class Operator
         BarRenderer renderer = (BarRenderer) plot.getRenderer();
         renderer.setDrawBarOutline(false);
 
-        // set up gradient paints for series...
-        GradientPaint gp0 = new GradientPaint(0.0f, 0.0f, Color.blue,
-                0.0f, 0.0f, new Color(0, 0, 64));
-        GradientPaint gp1 = new GradientPaint(0.0f, 0.0f, Color.green,
-                0.0f, 0.0f, new Color(0, 64, 0));
-        GradientPaint gp2 = new GradientPaint(0.0f, 0.0f, Color.red,
-                0.0f, 0.0f, new Color(64, 0, 0));
-        renderer.setSeriesPaint(0, gp0);
-        renderer.setSeriesPaint(1, gp1);
-        renderer.setSeriesPaint(2, gp2);
-        
         panel = new ChartPanel(chart);
         panel.setPreferredSize(new java.awt.Dimension(300, 300));
         panel.setVisible(true);
@@ -110,20 +99,48 @@ public class Operator
         return panel;
 	}
 	
-	private CategoryDataset createLogDataset(){
-		DefaultCategoryDataset dataset = new DefaultCategoryDataset(); 
-		int cat_nr = 1;
+	public ChartPanel createTraceChart() {
+	  	ChartPanel panel;
+        JFreeChart chart = ChartFactory.createBarChart(
+            "Iloœæ odwiedzonych wêz³ów wewn¹trz ASa",    // chart title
+            "Host",                // domain axis label
+            "Iloœæ wêz³ów",           // range axis label
+            createDataset(true),       // data
+            PlotOrientation.VERTICAL, // orientation
+            true,                     // include legend
+            true,                     // tooltips?
+            false                     // URLs?
+        );
+        
+        chart.setBackgroundPaint(Color.white);
 
-		/*ResearchResult[] researchResults = researchResultManager.getResearchResult();
-		for(ResearchResult  item: researchResults){
-			System.out.println(item.toString());
-		}
-		System.out.println(researchResultManager.getAsnList());*/
-//		researchResultManager.readAsnTests("as1");
-		list = researchResultManager.getAsnPingTests();
-		System.out.println(list);
+        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+
+        // set the range axis to display integers only...
+        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
+
+        // disable bar outlines...
+        BarRenderer renderer = (BarRenderer) plot.getRenderer();
+        renderer.setDrawBarOutline(false);
+
+        panel = new ChartPanel(chart);
+        panel.setPreferredSize(new java.awt.Dimension(300, 300));
+        panel.setVisible(true);
+        
+        return panel;
+	}
+	
+	private CategoryDataset createDataset(boolean traceDataset){
+		DefaultCategoryDataset dataset = new DefaultCategoryDataset(); 
+		
+		if(traceDataset)
+			list = researchResultManager.getAsnTracerouteTests();
+		else
+			list = researchResultManager.getAsnPingTests();
+		
 		for(ResearchResult item: list){
-			dataset.addValue(item.getResult(), item.getHost(), ""+cat_nr);
+			dataset.addValue(item.getResult(), item.getHost(), "");
 		}
 	    return dataset;
 	}
