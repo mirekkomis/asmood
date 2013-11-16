@@ -261,7 +261,7 @@ public class Operator
 				{
 					long time = System.currentTimeMillis();
 					int result = (int)ping(host, timeOut);
-					results.add(new TestResult("ping", as.getASN(), host, result, time));
+					results.add(new TestResult("PING", as.getASN(), host, result, time));
 					LOG("Test(\'ping\'-"+as.getASN()+"):"+host+" = "+(result == -1 ? "timeOut" : result));
 					
 					if(listener!=null && ((int)percent) < ((int)(percent+step)))
@@ -318,7 +318,7 @@ public class Operator
 					
 					long time = System.currentTimeMillis();
 					int result = hopsInAS(as.getASN(), asn_map, trace);
-					results.add(new TestResult("traceroute", as.getASN(), host, result, time));
+					results.add(new TestResult("TRACE", as.getASN(), host, result, time));
 					LOG("Test(\'traceroute\'-"+as.getASN()+"):"+host+" = "+result);
 					
 					if(listener!=null && ((int)percent) < ((int)(percent+step)))
