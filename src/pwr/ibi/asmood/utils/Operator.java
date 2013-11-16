@@ -23,7 +23,6 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
-import org.jfree.chart.renderer.category.BarRenderer;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
 
@@ -35,7 +34,7 @@ public class Operator
 	
 	private static JTextArea info_area;
 	
-	public ResearchResultManager researchResultManager;
+	public ArrayList<ResearchResultManager> researchResultManager = new ArrayList<ResearchResultManager>();
 	ArrayList<ResearchResult> list;
 	
 	public void read(String path, boolean filtering, ProgressListener listener)
@@ -49,33 +48,28 @@ public class Operator
 
 		if(listener!=null)
 			listener.onFinish();
-		
-		/*ArrayList<TestResult> results = new ArrayList<TestResult>();
-		results.add(new TestResult("ping", "as1", "111.111.111.111", 1, 5));
-		results.add(new TestResult("ping", "as2", "111.111.111.112", 2, 6));
-		results.add(new TestResult("ping", "as3", "111.111.111.113", 3, 7));
-		results.add(new TestResult("traceroute", "as4", "111.111.111.114", 4, 8));
-		CSVWriter.writeCSV(results);*/
 	}
 	
 	public void readResult(String path, boolean filtering, ProgressListener listener){
 		if(listener!=null)
 			listener.onStart();
 
-		researchResultManager = CSVReader.readCSVTests(path, listener);
-//		researchResultManager = CSVReader.readCSVTests("C:\\Users\\Adam\\workspace\\asmood1383570012005.csv", listener);
+		
+		researchResultManager.add(CSVReader.readCSVTests(path, listener));
+//		researchResultManager = CSVReader.readCSVTests("C:\\Users\\Adam\\workspace\\asmood1384616644663.csv", listener);
 		
 		if(listener!=null)
 			listener.onFinish();
 	}
 	
+	public ChartPanel pingPanel;
 	public ChartPanel createPingChart() {
-	  	ChartPanel panel;
-        JFreeChart chart = ChartFactory.createBarChart(
-            "Czasy odpowiedzi hostÃ³w",    // chart title
+	  	
+        JFreeChart chart = ChartFactory.createLineChart(
+            "Czasy odpowiedzi hostów",    // chart title
             "Host",                // domain axis label
             "Czas odpowiedzi",           // range axis label
-            createDataset(false),       // data
+            createDataset(false, 0),       // data
             PlotOrientation.VERTICAL, // orientation
             true,                     // include legend
             true,                     // tooltips?
@@ -90,24 +84,21 @@ public class Operator
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
-        // disable bar outlines...
-        BarRenderer renderer = (BarRenderer) plot.getRenderer();
-        renderer.setDrawBarOutline(false);
-
-        panel = new ChartPanel(chart);
-        panel.setPreferredSize(new java.awt.Dimension(300, 300));
-        panel.setVisible(true);
+        pingPanel = new ChartPanel(chart);
+        pingPanel.setPreferredSize(new java.awt.Dimension(300, 300));
+        pingPanel.setVisible(true);
         
-        return panel;
+        return pingPanel;
 	}
 	
+	public ChartPanel tracePanel;
 	public ChartPanel createTraceChart() {
-	  	ChartPanel panel;
-        JFreeChart chart = ChartFactory.createBarChart(
-            "IloÅ›Ä‡ odwiedzonych wÄ™zÅ‚Ã³w wewnÄ…trz ASa",    // chart title
+	  	
+        JFreeChart chart = ChartFactory.createLineChart(
+            "Iloœæ odwiedzonych wêz³ów wewn¹trz ASa",    // chart title
             "Host",                // domain axis label
-            "IloÅ›Ä‡ wÄ™zÅ‚Ã³w",           // range axis label
-            createDataset(true),       // data
+            "Iloœæ wêz³ów",           // range axis label
+            createDataset(true, 0),       // data
             PlotOrientation.VERTICAL, // orientation
             true,                     // include legend
             true,                     // tooltips?
@@ -122,29 +113,29 @@ public class Operator
         NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
-        // disable bar outlines...
-        BarRenderer renderer = (BarRenderer) plot.getRenderer();
-        renderer.setDrawBarOutline(false);
-
-        panel = new ChartPanel(chart);
-        panel.setPreferredSize(new java.awt.Dimension(300, 300));
-        panel.setVisible(true);
+        tracePanel = new ChartPanel(chart);
+        tracePanel.setPreferredSize(new java.awt.Dimension(300, 300));
+        tracePanel.setVisible(true);
         
-        return panel;
+        return tracePanel;
 	}
 	
-	private CategoryDataset createDataset(boolean traceDataset){
-		DefaultCategoryDataset dataset = new DefaultCategoryDataset(); 
-		
-		if(traceDataset)
-			list = researchResultManager.getAsnTracerouteTests();
-		else
-			list = researchResultManager.getAsnPingTests();
-		
-		for(ResearchResult item: list){
-			dataset.addValue(item.getResult(), item.getHost(), "");
+	public DefaultCategoryDataset pingDataset = new DefaultCategoryDataset();;
+	public DefaultCategoryDataset traceDataset = new DefaultCategoryDataset();;
+	public CategoryDataset createDataset(boolean trace, int index){
+		if(trace){
+			list = researchResultManager.get(index).getAsnTracerouteTests();
+			for(ResearchResult item: list){
+				traceDataset.addValue(item.getResult(),"Badanie "+index, item.getHost());
+			}
+			return traceDataset;
+		}else{
+			list = researchResultManager.get(index).getAsnPingTests();
+			for(ResearchResult item: list){
+				pingDataset.addValue(item.getResult(),"Badanie "+index, item.getHost());
+			}
+			return pingDataset;
 		}
-	    return dataset;
 	}
 	
 	public ASDescription[] getLog()

@@ -20,6 +20,7 @@ import org.jfree.chart.ChartPanel;
 
 import pwr.ibi.asmood.logic.ProgressListener;
 import pwr.ibi.asmood.utils.Operator;
+import pwr.ibi.asmood.utils.ResearchResultManager;
 import pwr.ibi.asmood.utils.SelectedAS;
 
 
@@ -506,28 +507,41 @@ class MyMenu extends JPanel{
 		readen1.setBackground(Color.RED);
 		readen1.setBounds(35, 75, 140, 40);
 		
-		Vector comboBoxItems = new Vector();
-		final DefaultComboBoxModel model = new DefaultComboBoxModel(comboBoxItems);
-		JComboBox jComboBox = new JComboBox(model);
+		Vector<String> comboBoxItems = new Vector<String>();
+		final DefaultComboBoxModel<String> model = new DefaultComboBoxModel<String>(comboBoxItems);
+		final JComboBox<String> jComboBox = new JComboBox<String>(model);
 		jComboBox.setBounds(10, 185, 155, 20);
 		jComboBox.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				JComboBox cb = (JComboBox)e.getSource();
+				@SuppressWarnings("unchecked")
+				JComboBox<String> cb = (JComboBox<String>)e.getSource();
 			    String as = (String)cb.getSelectedItem();
-				operator.researchResultManager.readAsnTests(as);
-				ChartPanel pingPanel = operator.createPingChart();
-				myTabs.setComponentAt(1, pingPanel);
-				ChartPanel tracePanel = operator.createTraceChart();
-				myTabs.setComponentAt(2, tracePanel);
+
+			    operator.pingDataset.clear();
+			    operator.traceDataset.clear();
+			    
+			    int i=0;
+			    for(ResearchResultManager item: operator.researchResultManager){
+			    	item.readAsnTests(as);
+			    	operator.createDataset(false, i);
+					operator.createDataset(true, i);
+					i++;
+			    }
+				
+				operator.pingPanel.repaint();
+				operator.tracePanel.repaint();
 			}
 		});
 		
 		buttonRead1 = new JButton("Wczytaj");
         buttonRead1.setBounds(16, 125, 140, 30);
         buttonRead1.addActionListener(new ActionListener(){
-            @Override
+        	ChartPanel pingPanel;
+        	ChartPanel tracePanel;
+        	
+        	@Override
             public void actionPerformed(ActionEvent e) 
             {
             	Thread t;
@@ -545,17 +559,28 @@ class MyMenu extends JPanel{
 							@Override
 							public void onFinish() 
 							{
-								ArrayList<String> list = operator.researchResultManager.getAsnList();
-								operator.researchResultManager.readAsnTests(list.get(0));
-								ChartPanel pingPanel = operator.createPingChart();
-								myTabs.setComponentAt(1, pingPanel);
+								int index = operator.researchResultManager.size()-1;
+								ArrayList<String> list = operator.researchResultManager.get(index).getAsnList();
 								
-								ChartPanel tracePanel = operator.createTraceChart();
-								myTabs.setComponentAt(2, tracePanel);
-								
-								model.removeAllElements();
-								for(String item: list)
-									model.addElement(item);
+							    String as = (String)jComboBox.getSelectedItem();
+
+							    operator.researchResultManager.get(index).readAsnTests(as==null ? list.get(0):as);
+
+							    if(pingPanel==null){
+									pingPanel = operator.createPingChart();
+									myTabs.setComponentAt(1, pingPanel);
+									
+									tracePanel = operator.createTraceChart();
+									myTabs.setComponentAt(2, tracePanel);
+									
+									for(String item: list)
+										model.addElement(item);
+								}else{
+									operator.createDataset(false, index);
+									operator.createDataset(true, index);
+									pingPanel.repaint();
+									tracePanel.repaint();
+								}
 							}
 
 							@Override
