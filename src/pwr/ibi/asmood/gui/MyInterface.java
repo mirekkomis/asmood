@@ -521,12 +521,15 @@ class MyMenu extends JPanel{
 
 			    operator.pingDataset.clear();
 			    operator.traceDataset.clear();
+			    operator.pingPlot.clearRangeMarkers();
+			    operator.tracePlot.clearRangeMarkers();
 			    
 			    int i=0;
 			    for(ResearchResultManager item: operator.researchResultManager){
 			    	item.readAsnTests(as);
 			    	operator.createDataset(false, i);
 					operator.createDataset(true, i);
+					operator.setMarkers(i);
 					i++;
 			    }
 				
@@ -578,6 +581,7 @@ class MyMenu extends JPanel{
 								}else{
 									operator.createDataset(false, index);
 									operator.createDataset(true, index);
+									operator.setMarkers(index);
 									pingPanel.repaint();
 									tracePanel.repaint();
 								}

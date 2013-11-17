@@ -23,8 +23,12 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.NumberAxis;
 import org.jfree.chart.plot.CategoryPlot;
 import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.ValueMarker;
 import org.jfree.data.category.CategoryDataset;
 import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.statistics.Statistics;
+import org.jfree.ui.RectangleAnchor;
+import org.jfree.ui.TextAnchor;
 
 import pwr.ibi.asmood.logic.ProgressListener;
 
@@ -63,6 +67,7 @@ public class Operator
 	}
 	
 	public ChartPanel pingPanel;
+	public CategoryPlot pingPlot; 
 	public ChartPanel createPingChart() {
 	  	
         JFreeChart chart = ChartFactory.createLineChart(
@@ -78,10 +83,10 @@ public class Operator
         
         chart.setBackgroundPaint(Color.white);
 
-        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        pingPlot = (CategoryPlot) chart.getPlot();
 
         // set the range axis to display integers only...
-        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        NumberAxis rangeAxis = (NumberAxis) pingPlot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
         pingPanel = new ChartPanel(chart);
@@ -92,6 +97,7 @@ public class Operator
 	}
 	
 	public ChartPanel tracePanel;
+	public CategoryPlot tracePlot;
 	public ChartPanel createTraceChart() {
 	  	
         JFreeChart chart = ChartFactory.createLineChart(
@@ -107,12 +113,13 @@ public class Operator
         
         chart.setBackgroundPaint(Color.white);
 
-        CategoryPlot plot = (CategoryPlot) chart.getPlot();
+        tracePlot = (CategoryPlot) chart.getPlot();
 
         // set the range axis to display integers only...
-        NumberAxis rangeAxis = (NumberAxis) plot.getRangeAxis();
+        NumberAxis rangeAxis = (NumberAxis) tracePlot.getRangeAxis();
         rangeAxis.setStandardTickUnits(NumberAxis.createIntegerTickUnits());
 
+        setMarkers(0);
         tracePanel = new ChartPanel(chart);
         tracePanel.setPreferredSize(new java.awt.Dimension(300, 300));
         tracePanel.setVisible(true);
@@ -122,20 +129,60 @@ public class Operator
 	
 	public DefaultCategoryDataset pingDataset = new DefaultCategoryDataset();;
 	public DefaultCategoryDataset traceDataset = new DefaultCategoryDataset();;
+	ArrayList<Integer> pingResultList = new ArrayList<Integer>();
+	ArrayList<Integer> traceResultList = new ArrayList<Integer>();
 	public CategoryDataset createDataset(boolean trace, int index){
 		if(trace){
 			list = researchResultManager.get(index).getAsnTracerouteTests();
+			traceResultList.clear();
 			for(ResearchResult item: list){
+				traceResultList.add(item.getResult());
 				traceDataset.addValue(item.getResult(),"Badanie "+index, item.getHost());
 			}
 			return traceDataset;
 		}else{
 			list = researchResultManager.get(index).getAsnPingTests();
+			pingResultList.clear();
 			for(ResearchResult item: list){
+				pingResultList.add(item.getResult());
 				pingDataset.addValue(item.getResult(),"Badanie "+index, item.getHost());
 			}
 			return pingDataset;
 		}
+	}
+
+	public void setMarkers(int index){
+		double avg1 = Statistics.calculateMean(traceResultList);
+		ValueMarker vm = new ValueMarker(avg1);
+		vm.setPaint(Color.black);
+		vm.setLabel("Badanie: "+index+" Œrednia: "+avg1);
+		vm.setLabelAnchor(RectangleAnchor.BOTTOM_RIGHT);
+        vm.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
+		tracePlot.addRangeMarker(vm);
+		
+		double median1 = Statistics.calculateMedian(traceResultList, true);
+		vm = new ValueMarker(median1);
+		vm.setPaint(Color.gray);
+		vm.setLabel("Badanie: "+index+" Mediana: "+median1);
+		vm.setLabelAnchor(RectangleAnchor.BOTTOM_RIGHT);
+        vm.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
+		tracePlot.addRangeMarker(vm);
+		
+		double avg2 = Statistics.calculateMean(pingResultList);
+		vm = new ValueMarker(avg2);
+		vm.setPaint(Color.black);
+		vm.setLabel("Badanie: "+index+" Œrednia: "+avg2);
+		vm.setLabelAnchor(RectangleAnchor.BOTTOM_RIGHT);
+        vm.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
+		pingPlot.addRangeMarker(vm);
+		
+		double median2 = Statistics.calculateMedian(pingResultList, true);
+		vm = new ValueMarker(median2);
+		vm.setPaint(Color.gray);
+		vm.setLabel("Badanie: "+index+" Mediana: "+median2);
+		vm.setLabelAnchor(RectangleAnchor.BOTTOM_RIGHT);
+        vm.setLabelTextAnchor(TextAnchor.TOP_RIGHT);
+		pingPlot.addRangeMarker(vm);
 	}
 	
 	public ASDescription[] getLog()
